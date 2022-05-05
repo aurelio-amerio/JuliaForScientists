@@ -1,0 +1,4 @@
+name = "TruncatedPoly"
+uuid = "c8cc3813-faa7-4c5e-9d3f-12a2c3846c07"
+authors = ["Aurelio Amerio <aure.amerio@gmail.com>"]
+version = "0.1.0"

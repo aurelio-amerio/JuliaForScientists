@@ -12,7 +12,7 @@ c = (1,2,3)
 
 isbits(c)
 
-b
+c[2]
 
 #%%
 mutable struct Person{T<:Real}
@@ -37,3 +37,19 @@ end
 point = Point{Int64}(1,2)
 
 p1=Person("Aure",164,26)
+
+
+
+f(x::T) where {T<:Real} = print(T)
+
+f(1)
+
+typeof(1)
+
+function f1(x::Real)
+    if x>1
+        return 1
+    
+end
+
+@code_warntype f1(2)
