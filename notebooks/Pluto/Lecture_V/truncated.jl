@@ -94,7 +94,7 @@ end
 
 # ╔═╡ acfd727a-c9ce-4125-9d7a-0d3c74c245fd
 begin
-	import Base.:*, Base.:+
+	import Base: *, +
 	function *(s1::Series1, s2::Series1)
 		
 		v = similar(s1.c)
