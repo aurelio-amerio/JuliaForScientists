@@ -82,7 +82,7 @@ function Base.show(io::IO, pl::Player)
 end
 
 
-function addplay!(pl::Player, opponent, res::PlayResult)
+function addplay!(pl::Player, opponent::String, res::PlayResult)
 	push!(pl.matches, (opponent, res))
 	pl.score = pl.score + res.payoff
 	return nothing
@@ -129,34 +129,68 @@ end
 
 # this is the originale "plain text" poisonous function, to actually understand what's going on
 
+# function get_payload(cheater_name::String, cheating_prob=0.9::Float64)
+# 	global cheat_status=false
+# 	payload_exp = quote 
+# 		function addplay!(pl::Player, opponent, res_orig::PlayResult)
+# 			println("poisoned func")
+# 			cheat = rand()<=$cheating_prob
+# 			if pl.name != $cheater_name && opponent != $cheater_name
+# 				res = res_orig
+# 			else
+# 				if pl.name == $cheater_name
+# 					if cheat
+# 						res = PlayResult(false, true, 5)
+# 						global cheat_status=true
+# 					else
+# 						res = res_orig
+# 					end
+# 				elseif opponent == $cheater_name
+# 					if cheat_status
+# 						res = PlayResult(true, false, 0)
+# 						global cheat_status=false
+# 					else
+# 						res = res_orig
+# 					end
+# 				end
+# 			end
+			
+# 			push!(pl.matches, (opponent, res))
+# 			pl.score = pl.score + res.payoff
+# 			return nothing
+# 		end
+# 	end
+# 	return payload_exp
+# 	# payload_encrypted = base64encode(repr(payload_exp))
+# 	# return payload_encrypted
+# end
+
 function get_payload(cheater_name::String, cheating_prob=0.9::Float64)
-	global cheat_status=false
 	payload_exp = quote 
-		function addplay!(pl::Player, opponent, res_orig::PlayResult)
-			cheat = rand()<=$cheating_prob
-			if pl.name != $cheater_name && opponent != $cheater_name
-				println("we don't operate")
-				res = res_orig
-			else
-				if pl.name == $cheater_name
-					if cheat
-						println("cheating")
-						res = PlayResult(false, true, 5)
-						global cheat_status=true
-					else
-						println("not cheating")
-						res = res_orig
-					end
-				elseif opponent == $cheater_name
-					if cheat_status
-						println("cheating")
-						res = PlayResult(true, false, 0)
-						global cheat_status=false
-					else
-						println("not cheating")
-						res = res_orig
-					end
+
+		function addplay!(pl::Player, opponent::String, res_orig::PlayResult)
+			detect_match = (pl.name == $cheater_name || opponent == $cheater_name)
+			if detect_match
+				# if we don't get at least 3 points from the match, we try to cheat
+				# in other words, if the enemy does not cooperate with us, we steal their win
+				detected_loss = (pl.name == $cheater_name && res_orig.payoff<3) || (opponent == $cheater_name && res_orig.payoff == 5) 
+				if detected_loss
+					cheat = true #rand()<=$cheating_prob
+				else
+					cheat = false
 				end
+			else
+				cheat = false
+			end
+
+			if cheat
+				if pl.name == $cheater_name
+					res = PlayResult(false, true, 5)
+				else
+					res = PlayResult(true, false, 0)
+				end
+			else
+				res = res_orig
 			end
 			
 			push!(pl.matches, (opponent, res))
@@ -179,44 +213,51 @@ In this case, we will weaponise this technique to poison the addplay! function, 
 our own function, which will let us win against the opponent with a `cheating_prob`.
 """
 function poison_addplay!(cheater_name="cheatah", cheating_prob=0.9)
-	global status
-	my_status = "poisoned_by_$cheater_name" # mutex for status
-	try 
-		stat=status # check if status is defined, else throw an error
-		@assert stat == my_status #we poison the code only onces
-		return nothing
-	catch
-		# oh boy so much hacking to do
-		# global exp = get_payload(cheater_name, cheating_prob)
-
-		exp = get_payload(cheater_name,cheating_prob)
-
-		message = raw"""
--                                                        
--        ________  ________  ___       __   ________   _______   ________     
--       |\   __  \|\   __  \|\  \     |\  \|\   ___  \|\  ___ \ |\   ___ \    
--       \ \  \|\  \ \  \|\  \ \  \    \ \  \ \  \\ \  \ \   __/|\ \  \_|\ \   
--        \ \   ____\ \  \\\  \ \  \  __\ \  \ \  \\ \  \ \  \_|/_\ \  \ \\ \  
--         \ \  \___|\ \  \\\  \ \  \|\__\_\  \ \  \\ \  \ \  \_|\ \ \  \_\\ \ 
--          \ \__\    \ \_______\ \____________\ \__\\ \__\ \_______\ \_______\
--           \|__|     \|_______|\|____________|\|__| \|__|\|_______|\|_______|
--                                                                
--																																							  
-"""
-		print(message)
-		global status = my_status
-		eval(exp) 
-		# redirect_stderr(devnull) do
-		# 	# poison add_play and rewrite it with our function. 
-		# 	# We redirect errors to devnull to suppress warnings
-		# 	# eval(exp) 
-		# end
-
-	finally
-		return nothing
-	end
-	
+	global exp = get_payload(cheater_name, cheating_prob)
+	eval(exp)
+	# print("poisoned")
+	return
 end
+
+# function poison_addplay!(cheater_name="cheatah", cheating_prob=0.9)
+# 	global status
+# 	my_status = "poisoned_by_$cheater_name" # mutex for status
+# 	try 
+# 		stat=status # check if status is defined, else throw an error
+# 		@assert stat == my_status #we poison the code only onces
+# 		return nothing
+# 	catch
+# 		# oh boy so much hacking to do
+# 		# global exp = get_payload(cheater_name, cheating_prob)
+
+# 		exp = get_payload(cheater_name,cheating_prob)
+
+# 		message = raw"""
+# -                                                        
+# -        ________  ________  ___       __   ________   _______   ________     
+# -       |\   __  \|\   __  \|\  \     |\  \|\   ___  \|\  ___ \ |\   ___ \    
+# -       \ \  \|\  \ \  \|\  \ \  \    \ \  \ \  \\ \  \ \   __/|\ \  \_|\ \   
+# -        \ \   ____\ \  \\\  \ \  \  __\ \  \ \  \\ \  \ \  \_|/_\ \  \ \\ \  
+# -         \ \  \___|\ \  \\\  \ \  \|\__\_\  \ \  \\ \  \ \  \_|\ \ \  \_\\ \ 
+# -          \ \__\    \ \_______\ \____________\ \__\\ \__\ \_______\ \_______\
+# -           \|__|     \|_______|\|____________|\|__| \|__|\|_______|\|_______|
+# -                                                                
+# -																																							  
+# """
+# 		print(message)
+# 		global status = my_status
+# 		eval(exp) 
+# 		# redirect_stderr(devnull) do
+# 		# 	# poison add_play and rewrite it with our function. 
+# 		# 	# We redirect errors to devnull to suppress warnings
+# 		# 	# eval(exp) 
+# 		# end
+
+# 	finally
+# 		return nothing
+# 	end
+	
+# end
 
 
 
@@ -288,7 +329,7 @@ end
 #%%
 
 function strategy(s::String, matches::Vector{Tuple{String, PlayResult}})
-	poison_addplay!("cheatah", 0.9) 
+	poison_addplay!("cheatah", 0.6) 
     return fnever(s, matches)
 end
 
@@ -318,17 +359,17 @@ never_forget_player = Player("MERCILESS", "This never forgets",
 cheater_player = Player("cheatah", "This is a ruthless cheater, and forces other players to lose on purpose against it",  strategy)
 
 #%%
-poison_addplay!("cheatah",0.9)
-res = PlayResult(false, true, 2)
-addplay!(cheater_player, "fool", res)
-cheater_player.score
+# poison_addplay!("cheatah",0.9)
+# res = PlayResult(false, true, 2)
+# addplay!(cheater_player, "fool", res)
+# cheater_player.score
 #%%
-pls = [deepcopy(nocoop_player),deepcopy(nocoop_player), deepcopy(cheater_player), deepcopy(never_forget_player), deepcopy(never_forget_player)]
+pls = [deepcopy(coop_player),deepcopy(nocoop_player), deepcopy(cheater_player), deepcopy(never_forget_player), deepcopy(never_forget_player)]
 # pls = [deepcopy(rand_player),deepcopy(rand_player),deepcopy(nocoop_player),deepcopy(nocoop_player), deepcopy(never_forget_player)]
 
-tournament(pls, 1000)
+tournament(pls, 10)
 
-# %%
+
 for player in pls
 	println("$(player.name) $(player.score)")
 end
@@ -367,3 +408,25 @@ test_me()
 
 
 # print(message)
+#%%
+test_me() = print("failed")
+function get_exp()
+	exp = quote
+		test_me()=print("success!")
+	end
+	return exp
+end
+
+function eval_test()
+	exp=get_exp()
+	eval(exp)
+end
+
+function test_me2()
+	eval_test()
+	return 1
+end
+#%%
+test_me2()
+
+test_me()
