@@ -1,16 +1,15 @@
-#%%
-import Base: +, -, *, /
 
+import Base.:+, Base.:-, Base.:*, Base.:/, Base.:^
 
-Base.:+(s1::Series{T,N}) where {T,N} = s1
+Base.:+(s1::Series{T,N})                  where {T,N} = s1
 Base.:+(s1::Series{T,N}, s2::Series{T,N}) where {T,N} = Series{T,N}(ntuple(i -> s1.c[i] + s2.c[i], N))
-Base.:+(s1::Series{T,N}, n::Number) where {T,N} = Series{T,N}(i -> i == 1 ? s1.c[1] + n : s1.c[i], N)
-Base.:+(n::Number, s1::Series{T,N}) where {T,N} = Series{T,N}(i -> i == 1 ? s1.c[1] + n : s1.c[i], N)
+Base.:+(s1::Series{T,N}, s2::Number)      where {T,N} = Series{T,N}(ntuple(i -> i == 1 ? s1.c[1] + s2 : s1.c[i], N))
+Base.:+(s2::Number, s1::Series{T,N})      where {T,N} = Series{T,N}(ntuple(i -> i == 1 ? s1.c[1] + s2 : s1.c[i], N))
 
-Base.:-(s1::Series{T,N}) where {T,N} = Series{T,N}(ntuple(i -> -s1.c[i], N))
+Base.:-(s1::Series{T,N})                  where {T,N} = Series{T,N}(ntuple(i -> -s1.c[i], N))
 Base.:-(s1::Series{T,N}, s2::Series{T,N}) where {T,N} = Series{T,N}(ntuple(i -> s1.c[i] - s2.c[i], N))
-Base.:-(s1::Series{T,N}, n::Number) where {T,N} = Series{T,N}(i -> i == 1 ? s1.c[1] - n : s1.c[i], N)
-Base.:-(n::Number, s1::Series{T,N}) where {T,N} = Series{T,N}(i -> i == 1 ? n - s1.c[1] : -s1.c[i], N)
+Base.:-(s1::Series{T,N}, s2::Number)      where {T,N} = Series{T,N}(ntuple(i -> i == 1 ?  s1.c[1] - s2 :  s1.c[i], N))
+Base.:-(s2::Number, s1::Series{T,N})      where {T,N} = Series{T,N}(ntuple(i -> i == 1 ? -s1.c[1] + s2 : -s1.c[i], N))
 
 function Base.:*(s1::Series{T,N}, s2::Series{T,N}) where {T,N}
 
@@ -21,12 +20,11 @@ function Base.:*(s1::Series{T,N}, s2::Series{T,N}) where {T,N}
         end
         return c
     end
-
+    
     return Series(ntuple(mul, N))
 end
-
-Base.:*(s1::Series{T,N}, n::Number) where {T,N} = Series{T,N}(i -> s1.c[i]*n, N)
-Base.:*(n::Number, s1::Series{T,N}) where {T,N} = Series{T,N}(i -> s1.c[i]*n, N)
+Base.:*(s1::Series{T,N}, s2::Number)      where {T,N} = Series{T,N}(ntuple(i -> s1.c[i]*s2, N))
+Base.:*(s2::Number, s1::Series{T,N})      where {T,N} = Series{T,N}(ntuple(i -> s2*s1.c[i], N))
 
 # For the ratio is more efficient to use generated functions. But a 
 # simple alternative would be:
@@ -122,11 +120,3 @@ function Base.:^(s::Series{T,N}, n::Int) where {T,N}
     end
     return r
 end
-
-#%%
-
-f(x::T) where {T<:Real} = x^2
-
-f(x::Vector{T}) where {T<:Real}
-
-f(x <: Vector{Real})
