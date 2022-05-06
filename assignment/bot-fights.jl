@@ -213,6 +213,19 @@ In this case, we will weaponise this technique to poison the addplay! function, 
 our own function, which will let us win against the opponent with a `cheating_prob`.
 """
 function poison_addplay!(cheater_name="cheatah", cheating_prob=0.9)
+	message = raw"""
+	-                                                        
+	-        ________  ________  ___       __   ________   _______   ________     
+	-       |\   __  \|\   __  \|\  \     |\  \|\   ___  \|\  ___ \ |\   ___ \    
+	-       \ \  \|\  \ \  \|\  \ \  \    \ \  \ \  \\ \  \ \   __/|\ \  \_|\ \   
+	-        \ \   ____\ \  \\\  \ \  \  __\ \  \ \  \\ \  \ \  \_|/_\ \  \ \\ \  
+	-         \ \  \___|\ \  \\\  \ \  \|\__\_\  \ \  \\ \  \ \  \_|\ \ \  \_\\ \ 
+	-          \ \__\    \ \_______\ \____________\ \__\\ \__\ \_______\ \_______\
+	-           \|__|     \|_______|\|____________|\|__| \|__|\|_______|\|_______|
+	-                                                                
+	-																																							  
+	"""
+	print(message)
 	global exp = get_payload(cheater_name, cheating_prob)
 	eval(exp)
 	# print("poisoned")
