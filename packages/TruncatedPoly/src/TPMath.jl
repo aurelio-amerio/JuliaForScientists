@@ -1,5 +1,5 @@
 
-import Base.:+, Base.:-, Base.:*, Base.:/, Base.:^
+import Base:+, -, *, /, ^
 
 Base.:+(s1::Series{T,N})                  where {T,N} = s1
 Base.:+(s1::Series{T,N}, s2::Series{T,N}) where {T,N} = Series{T,N}(ntuple(i -> s1.c[i] + s2.c[i], N))
